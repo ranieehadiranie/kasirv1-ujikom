@@ -48,6 +48,6 @@
 <!-- AdminLTE dashboard demo (This is only for demo purposes) -->
 <script src="{{ asset('') }}dist/js/pages/dashboard.js"></script>
 
-<script src="{{ mix('js/app.js') }}" ></script>
+@vite(['resources/js/app.js'])
 </body>
 </html>
