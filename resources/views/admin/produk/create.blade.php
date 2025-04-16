@@ -1,5 +1,7 @@
 @extends('admin.template.master')
-
+@section('title')
+    APLIKASI KASIR | Produk
+@endsection
 @section('css')
     
 @endsection
@@ -29,9 +31,10 @@
         <section class="content">
             <div class="container-fluid">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header pt-6">
                         <h3 class="card-title">{{ $title }}</h3>
-                        <a href="{{ route('produk.index') }}" class="btn btn-sm btn-warning float-right">Kembali</a>
+                        <div class="card-toolbar">
+                        <a href="{{ route('produk.index') }}" class="btn btn-sm btn-warning ">Kembali</a>
                         @if ($errors->any())
                             @foreach ($errors->all() as $error)
                                 <div class="alert alert-danger" role="alert">
@@ -42,6 +45,7 @@
                         <div id="error-container" style=" display:none ">
                             <div class="alert alert-danger">
                                 <p id="error-message"></p>
+                            </div>
                             </div>
                         </div>
                     </div>

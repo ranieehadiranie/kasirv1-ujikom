@@ -1,5 +1,7 @@
 @extends('admin.template.master')
-
+@section('title')
+    APLIKASI KASIR | Log Produk
+@endsection
 @section('css')
     <!-- DataTables -->
     <link rel="stylesheet" href="{{ asset('') }}plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
@@ -34,12 +36,15 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">{{ $title }}</h3>
-                        <a href="{{ route('produk.create') }}" class="btn btn-sm btn-primary float-right">Tambah</a>
-                        @if (session()->has('success'))
-                            <div class="alert alert-success">
-                                {{ session('success') }}
-                            </div>
-                        @endif
+                        <div class="card-toolbar">
+
+                            <a href="{{ route('produk.create') }}" class="btn btn-sm btn-primary float-right">Tambah</a>
+                            @if (session()->has('success'))
+                                <div class="alert alert-success">
+                                    {{ session('success') }}
+                                </div>
+                            @endif
+                        </div>
 
                     </div>
                     <div class="card-body">

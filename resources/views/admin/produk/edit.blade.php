@@ -1,7 +1,6 @@
 @extends('admin.template.master')
-
-@section('css')
-    
+@section('title')
+    APLIKASI KASIR | Produk
 @endsection
 
 @section('content')

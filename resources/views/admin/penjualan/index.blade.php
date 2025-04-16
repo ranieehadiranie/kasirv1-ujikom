@@ -1,5 +1,7 @@
 @extends('admin.template.master')
-
+@section('title')
+    APLIKASI KASIR | Data Penjualan
+@endsection
 @section('css')
     <!-- DataTables -->
     <link rel="stylesheet" href="{{ asset('') }}plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
@@ -58,9 +60,11 @@
         <section class="content">
             <div class="container-fluid">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header pt-6">
                         <h3 class="card-title">{{ $title }}</h3>
-                        <a href="{{ route('penjualan.create') }}" class="btn btn-sm btn-primary float-right">Tambah</a>
+                        <a href="{{ route('penjualan.create') }}" >
+                        <button class="btn btn-primary btn-sm  ">Tambah</button>
+                        </a>
                         @if (session()->has('success'))
                             <div class="alert alert-success">
                                 {{ session('success') }}
@@ -91,7 +95,7 @@
                                                 <a href="{{ route('penjualan.nota', $penjualan->id) }}" class="btn btn-success"  target="_blank">Nota</a>
                                             @else
                                             <div class="dropdown">
-                                                <button class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
+                                                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                                     Bayar
                                                 </button>
                                                 <div class="dropdown-menu">
@@ -135,7 +139,7 @@
                 "responsive": true,
                 "lengthChange": false,
                 "autoWidth": false,
-                "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
+                "buttons": ["copy", "csv", "excel", "pdf", "colvis"]
             }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
         });
     </script>

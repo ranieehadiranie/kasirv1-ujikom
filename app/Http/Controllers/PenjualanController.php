@@ -8,6 +8,7 @@ use App\Models\Penjualan;
 use App\Models\Produk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PenjualanController extends Controller
 {
@@ -16,6 +17,7 @@ class PenjualanController extends Controller
      */
     public function index()
     {
+        
         $title = 'Penjualan';
         $subtitle = 'Index';
         $penjualans = Penjualan::join('users', 'penjualans.UsersId', '=', 'users.id')
@@ -40,19 +42,34 @@ class PenjualanController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request->all());
         $validate = $request->validate([
             'ProdukId' => 'required',
             'JumlahProduk' => 'required',
         ]);
+    
+        // Cek stok untuk tiap produk
+        foreach ($request->ProdukId as $key => $ProdukId) {
+            $produk = Produk::find($ProdukId);
+            $jumlahDibeli = $request->JumlahProduk[$key];
+    
+            if ($produk->Stok < $jumlahDibeli) {
+                return redirect()->back()
+                    ->withErrors(['msg' => "Stok untuk produk tidak mencukupi. Stok tersedia: {$produk->Stok}"])
+                    ->withInput();
+            }
+        }
+    
+        // Jika semua stok aman, lanjutkan simpan penjualan
         $data_penjualan = [
             'TanggalPenjualan' => date('Y-m-d'),
             'UsersId' => Auth::user()->id,
             'TotalHarga' => $request->total,
         ];
+    
         $simpanPenjualan = Penjualan::create($data_penjualan);
+    
         foreach ($request->ProdukId as $key => $ProdukId){
-            $simpanDetailPenjualan = DetailPenjualan::create([
+            DetailPenjualan::create([
                 'PenjualanId' => $simpanPenjualan->id,
                 'ProdukId' => $ProdukId,
                 'harga' => $request->harga[$key],
@@ -60,10 +77,10 @@ class PenjualanController extends Controller
                 'SubTotal' => $request->TotalHarga[$key],
             ]);
         }
-
+    
         return redirect()->route('penjualan.index')->with('success', 'Penjualan Berhasil Ditambahkan');
     }
-
+    
     /**
      * Display the specified resource.
      */
@@ -121,13 +138,18 @@ class PenjualanController extends Controller
            'JenisBayar' => 'Cash',
        ]);
 
-       if($simpan){
-        return response()->json(['status' => 200, 'message' => 'Pembayaran Berhasil']);
-       }else{
-        return response()->json(['status' => 500, 'message' => 'Pembayaran Gagal']);
-       }
+       $detailPenjualan = DetailPenjualan::where('PenjualanId', $request->id)->get();
+         foreach ($detailPenjualan as $detail) {
+              $produk = Produk::find($detail->ProdukId);
+              if ($produk) {
+                  $produk->Stok -= $detail->JumlahProduk;
+                  $produk->Users_id= Auth::user()->id;
+                    $produk->save();
+                }
+         }   
+         return response()->json(['status' => 200, 'message' => 'Pembayaran Berhasil']);
+        }
 
-    }
 
     public function Nota($id)
     {
@@ -143,5 +165,29 @@ class PenjualanController extends Controller
         }
         return view('admin.penjualan.nota', compact('penjualan', 'detailpenjualan', 'totalBayar','kembalian'));
     }
+public function dashboard()
+{
+    $totalSalesToday = Penjualan::whereDate('TanggalPenjualan', date('Y-m-d'))->sum('TotalHarga');
+    $transactionCount = Penjualan::whereDate('TanggalPenjualan', date('Y-m-d'))->count();
+    $revenueToday = $totalSalesToday;
+
+    // Data untuk grafik penjualan
+    $sales = Penjualan::selectRaw('DATE(TanggalPenjualan) as date, SUM(TotalHarga) as total')
+        ->groupBy('date')
+        ->orderBy('date', 'asc')
+        ->get();
+    $salesDates = $sales->pluck('date');
+    $salesData = $sales->pluck('total');
+
+    // Produk terlaris
+    $topProducts = DetailPenjualan::join('produks', 'detail_penjualans.ProdukId', '=', 'produks.id')
+        ->select('produks.NamaProduk', DB::raw('SUM(detail_penjualans.JumlahProduk) as total_sold'))
+        ->groupBy('produks.NamaProduk')
+        ->orderBy('total_sold', 'desc')
+        ->take(5)
+        ->get();
+
+    return view('admin.dashboard', compact('totalSalesToday', 'transactionCount', 'revenueToday', 'salesDates', 'salesData', 'topProducts'));
+}
 
 }

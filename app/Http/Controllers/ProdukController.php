@@ -17,10 +17,9 @@ class ProdukController extends Controller
      */
     public function index()
     {
-        $title = 'Produk';
-        $subtitle = 'Index';
-        $produks = Produk::all();
-        return view('admin.produk.index', compact('title', 'subtitle', 'produks'));
+        $data['main'] = 'Produk';
+        $data['produks'] = Produk::all();
+        return view('admin.produk.index', $data);
     }
 
     /**
@@ -131,31 +130,52 @@ class ProdukController extends Controller
         return view('admin.produk.logproduk', compact('title', 'subtitle', 'produks'));
     }
 
-    public function cetaklabel(Request $request)
-    {
-        $id_produk = $request->id_produk; // Bisa berupa array atau nilai tunggal
-        $barcodes = [];
+    public function cetakLabel(Request $request)
+{
+    logger($request->all());
 
-        if (is_array($id_produk)) {
-            // Jika $id_produk adalah array, proses setiap ID dalam array
-            foreach ($id_produk as $id) {
-                $id = (string) $id; // Pastikan ID adalah string 
-                $harga = Produk::find($id)->Harga;
-                $barcode = DNS1DFacade::getBarcodeHTML($id, 'C128'); // Membuat barcode untuk setiap ID
-                $barcodes[] = ['barcode' => $barcode, 'harga' => $harga]; // Simpan barcode ke array
+    $id_produk = $request->id_produk;
+    $barcodes = [];
+
+    if (is_array($id_produk)) {
+        // Jika array, proses semua ID
+        foreach ($id_produk as $id) {
+            $id = (string) $id;
+            $produk = Produk::find($id);
+
+            if ($produk) {
+                $barcode = DNS1DFacade::getBarcodeHTML($id, 'C128');
+                $barcodes[] = [
+                    'barcode' => $barcode,
+                    'harga' => $produk->Harga,
+                    'produk' => $produk->NamaProduk
+                ];
             }
-        } else {
-            // Jika hanya satu nilai, konversi menjadi string dan proses
-            $id_produk = (string) $id_produk;
-            $harga = Produk::find($id_produk)->Harga;
-            $barcode = DNS1DFacade::getBarcodeHTML($id_produk, 'C128'); // Membuat barcode untuk setiap ID
-            $barcodes[] = ['barcode' => $barcode, 'harga' => $harga]; // Simpan barcode ke array
         }
-        $pdf = Pdf::loadView('admin.produk.cetaklabel', compact('barcodes'));
-        
-        $file_path = storage_path('app/public/barcodes.pdf');
-        $pdf->save($file_path);
+    } else {
+        // Jika hanya satu produk
+        $id_produk = (string) $id_produk;
+        $produk = Produk::find($id_produk);
 
-        return response()->json(['url' => asset('storage/barcodes.pdf')]);
+        if ($produk) {
+            $barcode = DNS1DFacade::getBarcodeHTML($id_produk, 'C128');
+            $barcodes[] = [
+                'barcode' => $barcode,
+                'harga' => $produk->Harga,
+                'produk' => $produk->NamaProduk
+            ];
+        }
     }
+
+    if (empty($barcodes)) {
+        return response()->json(['message' => 'Tidak ada produk yang dipilih atau produk tidak ditemukan.'], 400);
+    }
+
+    $pdf = Pdf::loadView('admin.produk.cetaklabel', compact('barcodes'));
+    
+    $file_path = storage_path('app/public/barcodes.pdf');
+    $pdf->save($file_path);
+
+    return response()->json(['url' => asset('storage/barcodes.pdf')]);
+}
 }

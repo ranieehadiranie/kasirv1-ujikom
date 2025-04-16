@@ -19,8 +19,8 @@ table {
 </style>
 
 <body>
-    <H1>Nota Toko Laravel</H1>
-    <h5>Alamat SMK TI PELITA NUSANTARA</h5>
+    <H1>Nota Toko</H1>
+    <h5>Aplikasi Kasir</h5>
 
     <table width="100%" >
         <thead>
